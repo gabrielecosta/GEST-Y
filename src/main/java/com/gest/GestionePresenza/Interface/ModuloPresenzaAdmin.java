@@ -1,0 +1,222 @@
+package com.gest.GestionePresenza.Interface;
+import javax.swing.*;
+
+import com.gest.Entity.Turno;
+import com.gest.Entity.Utente;
+import com.gest.GestioneAccount.Interface.ModuloDashBoard;
+import com.gest.GestionePresenza.Control.ingressoRemotoCtl;
+
+import java.awt.*;
+import java.awt.event.*;
+public class ModuloPresenzaAdmin extends JFrame implements ActionListener{
+    
+	private Utente utente;
+	JPanel menu;
+	JButton indietro,invia;
+	JLabel errore,errore2,errore3,errore4,errore5,errore6,fatto,motivo,matricola;
+	JTextField Motivo,Matricola;
+	
+	public ModuloPresenzaAdmin(Utente utente){
+		setResizable(false);
+		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		this.utente = new Utente();
+		this.utente = utente;
+
+        Motivo = new JTextField(15);    //set length of the text
+        Motivo.setBounds(500,200,200,30);
+		
+		motivo = new JLabel();
+		motivo.setText("Motivazione:");
+        motivo.setBounds(400,200,200,30);
+        
+		errore = new JLabel();
+		errore.setText("Errore! Inserire Motivazione");
+		errore.setBounds(500,170, 200,30);
+		errore.setForeground(Color.red.darker());
+		errore.setVisible(false);
+		
+		errore2 = new JLabel();
+		errore2.setText("Errore! Non ci sono turni da firmare!");
+		errore2.setBounds(500,170, 250,30);
+		errore2.setForeground(Color.red.darker());
+		errore2.setVisible(false);
+		
+		errore3 = new JLabel();
+		errore3.setText("Errore! Inserisci Matricola!");
+		errore3.setBounds(500,170, 250,30);
+		errore3.setForeground(Color.red.darker());
+		errore3.setVisible(false);
+		
+		errore4 = new JLabel();
+		errore4.setText("Errore! Campi Vuoti!");
+		errore4.setBounds(500,170, 250,30);
+		errore4.setForeground(Color.red.darker());
+		errore4.setVisible(false);
+		
+		errore5 = new JLabel();
+		errore5.setText("Errore! Matricola inesistente!");
+		errore5.setBounds(500,170, 250,30);
+		errore5.setForeground(Color.red.darker());
+		errore5.setVisible(false);
+		
+		errore6 = new JLabel();
+		errore6.setText("Errore! Inserire una matricola valida!");
+		errore6.setBounds(500,170, 250,30);
+		errore6.setForeground(Color.red.darker());
+		errore6.setVisible(false);
+		
+		matricola = new JLabel();
+		matricola.setText("Matricola:");
+        matricola.setBounds(400,250,200,30);
+        
+        Matricola = new JTextField(15);    //set length of the text
+        Matricola.setBounds(500,250,200,30);
+        
+		fatto = new JLabel();
+		fatto.setText("Presenza registrata con successo!");
+		fatto.setBounds(500,170, 200,30);
+		fatto.setForeground(Color.GREEN);
+		fatto.setVisible(false);
+		
+		indietro= new JButton("Indietro");
+		indietro.setBounds(500,350,200,30);
+		indietro.setBackground(Color.white);
+		
+		invia= new JButton("Invia");
+		invia.setBounds(500,300,200,30);
+		invia.setBackground(Color.white);
+		
+		menu = new JPanel();
+		menu.setLayout(null);
+		menu.setSize(1200,600);
+		menu.setVisible(true);
+		menu.add(Motivo);
+		menu.add(errore);
+		menu.add(errore2);
+		menu.add(errore3);
+		menu.add(errore4);
+		menu.add(errore5);
+		menu.add(errore6);
+		menu.add(fatto);
+		menu.add(invia);
+		menu.add(motivo);
+		menu.add(indietro);
+		menu.add(Matricola);
+		menu.add(matricola);
+		add(menu);
+		invia.addActionListener(this::Invia);
+	    indietro.addActionListener(this);	
+	}
+	
+	public void Invia(ActionEvent e) {
+
+		ingressoRemotoCtl ingresso = new ingressoRemotoCtl();
+		String Mot = Motivo.getText();
+		String Mat = Matricola.getText();
+    	boolean s = Mat.matches(".*[a-zA-Z]+.*");
+		if(Mat.equals("") & Mot.equals("")){
+			errore4.setVisible(true);
+			errore5.setVisible(false);
+			errore3.setVisible(false);
+			errore2.setVisible(false);
+			errore.setVisible(false);
+			errore6.setVisible(false);
+		}
+		else if(Mot.equals("")) {
+			errore5.setVisible(false);
+			errore4.setVisible(false);
+			errore3.setVisible(false);
+			errore2.setVisible(false);
+			errore.setVisible(true);
+			errore6.setVisible(false);
+		}
+		else if(Mat.equals("")) {
+			errore5.setVisible(false);
+			errore4.setVisible(false);
+			errore3.setVisible(true);
+			errore2.setVisible(false);
+			errore.setVisible(false);
+			errore6.setVisible(false);
+		}
+		else if(s == true) {
+			errore5.setVisible(false);
+			errore4.setVisible(false);
+			errore3.setVisible(false);
+			errore2.setVisible(false);
+			errore.setVisible(false);
+			errore6.setVisible(true);
+		}
+		else if(!ingresso.checkImpiegato(Integer.parseInt(Matricola.getText()))) {
+			ErroreMatricola();
+		}
+		else
+		{
+
+			Turno turno = new Turno();
+			turno = ingresso.getTurno(Integer.parseInt(Matricola.getText()));
+			//se non è in turno:
+			boolean inTurno = !(ingresso.isPresente(turno));
+			
+			
+			if(inTurno == false) {
+				Errore();
+			}
+			else {
+				ingresso.firmaIngresso(turno, Integer.parseInt(Matricola.getText()), Motivo.getText());
+				boolean flag = ingresso.getFlag();
+				if (flag) {
+					Conferma();
+					//cofnerma
+				} else {
+					//errore
+					Errore();
+				}
+				
+			}
+			
+
+		}
+		
+	
+	}
+	public void Conferma() {
+		
+		errore5.setVisible(false);
+		errore4.setVisible(false);
+		errore3.setVisible(false);
+		errore2.setVisible(false);
+		errore6.setVisible(false);
+		errore.setVisible(false);
+		
+		fatto.setVisible(true);
+		Motivo.setVisible(false);
+		motivo.setVisible(false);
+		invia.setVisible(false);
+		matricola.setVisible(false);
+		Matricola.setVisible(false);
+		indietro.setBounds(500,200,200,50);
+	}
+	public void Errore() {
+		errore5.setVisible(false);
+		errore4.setVisible(false);
+		errore3.setVisible(false);
+		errore2.setVisible(true);
+		errore.setVisible(false);
+		errore6.setVisible(false);
+	}
+	public void ErroreMatricola() {
+		errore5.setVisible(true);
+		errore4.setVisible(false);
+		errore3.setVisible(false);
+		errore2.setVisible(false);
+		errore6.setVisible(false);
+		errore.setVisible(false);
+	}
+	public void actionPerformed(ActionEvent e) {
+		// TODO Auto-generated method stub
+		ModuloDashBoard dashboard = new ModuloDashBoard(utente);
+        dashboard.setSize(1200,600);
+        dashboard.setVisible(true);
+    	dispose();
+	}
+}
